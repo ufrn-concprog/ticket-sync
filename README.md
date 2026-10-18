@@ -28,7 +28,7 @@
 O objetivo deste trabalho prático é projetar, implementar e avaliar o núcleo concorrente de um serviço de venda de ingressos de alta demanda, escolhendo e justificando os mecanismos de sincronização adequados para cada parte do problema. O foco não está apenas em fazer o programa executar, mas também em responder, com argumentos e medições, perguntas como:
 
 - Que estado é compartilhado e quais invariantes precisam ser preservados?
-- Qual mecanismo (exclusão mútua, semáforo, monitor com variável de condição, *lock* de leitura e escrita, barreira, operação atômica) serve melhor a cada ponto, e por quê?
+- Qual mecanismo de sincronização (semáforo, monitor com variável de condição, *lock* de leitura e escrita, barreira, operação atômica) serve melhor a cada ponto, e por quê?
 - Quanto custa a escolha mais simples, e o que se ganha ao refiná-la?
 
 ## O problema
@@ -61,11 +61,11 @@ O arquivo de carga contém uma linha por registro. Linhas em branco e linhas com
 
 ### Parâmetros
 
-O comportamento do serviço depende de oito parâmetros, fornecidos a partir da primeira linha de cada arquivo de carga:
+O comportamento do serviço depende de oito parâmetros, fornecidos na linha iniciada com o prefixo `PARAMS` no arquivo de carga. Esses parâmtros são:
 
 | Parâmetro | Significado |
 | :-------- | :---------- |
-| `seats`   | Número total de assentos do evento. Os assentos são identificados por números inteiros de `0` a `seats-1`. |
+| `seats` | Número total de assentos do evento. Os assentos são identificados por números inteiros de `0` a `seats-1`. |
 | `section_size` | Quantidade de assentos em cada setor. O setor do assento `a` é `a / section_size` (divisão inteira), de modo que o Setor 0 tem assentos numerados de `0` a `section_size-1`, o Setor 1 os seguintes, e assim por diante. O último setor pode ser menor, se `seats` não for múltiplo de `section_size`. Os setores existem apenas para a operação `view`, que consulta o mapa de um setor por vez. |
 | `max_holds` | Número máximo de reservas válidas que um mesmo comprador pode manter simultaneamente (limite do grupo). |
 | `ttl_ms` | Tempo ($TTL$), em milissegundos, durante o qual uma reserva permanece válida. Uma reserva concedida no instante $t_0$ é válida até $t_0$ + `ttl_ms`. Depois disso, o assento volta a ficar disponível, mesmo que ninguém o tenha liberado explicitamente. |
@@ -83,7 +83,7 @@ Em cada linha `SESSION` do arquivo de carga, `<id>` é um inteiro único, usado 
 | Operação na linha | Significado | Chamada no serviço |
 | :---------------- | :---------- | :----------------- |
 | `V <sector>` | A pessoa compradora consulta o mapa de um setor | `view(sector)` |
-| `H <seat>` | A pessoa compradora tenta reservar um assento | `hold(buyer, sector)` |
+| `H <seat>` | A pessoa compradora tenta reservar um assento | `hold(buyer, seat)` |
 | `P <seat> ok` ou `P <seat> bad` | A pessoa compradora paga pelo assento; `ok` refere-se a pagamento aprovado e `bad` a pagamento recusado | `purchase(buyer, seat, card_ok)` |
 | `R <seat>` | A pessoa compradora libera uma reserva por conta própria | `release(buyer, seat)` |
 | `T <time>` | A pessoa compradora "pensa" por `<time>` milissegundos antes da próxima operação | Nenhuma: a *thread* é simplesmente suspensa |
@@ -120,7 +120,7 @@ Um assento pode ter os seguintes estados:
 
 Uma reserva cujo prazo expirou equivale a um assento disponível para todos os efeitos, independentemente da estratégia utilizada para detectá-la. Note que não existe uma operação que "expire" a reserva: o vencimento ocorre porque o tempo passou e o serviço precisa percebê-lo.
 
-O serviço é um objeto que implementa a interface `TicketService` definida na infraestrutura de execução. Essa interface define cinco operações que correspondem às ações de uma pessoa compradora, somando-se a elas duas operações referentes aos processos de reserva e de compra.
+O serviço é um objeto que implementa a interface `TicketService` definida na infraestrutura de execução. Essa interface define quatro operações que correspondem às ações de uma pessoa compradora, somando-se a operações adicionais referentes à execução do serviço:
 
 | Operação | Ação da pessoa compradora | Quem a chama |
 | :------- | :------------------------ | :----------- |
@@ -189,22 +189,22 @@ O repositório está organizado da seguinte forma e os seus elementos principais
 ```text
 ticket-sync/
 ├── author.md
+├── README.md
 ├── cpp/
-    ├── coarse_service.h
-    ├── fine_service.h
-    ├── harness.h
-    ├── main.cpp
-    ├── Makefile
+│   ├── coarse_service.h
+│   ├── fine_service.h
+│   ├── harness.h
+│   ├── main.cpp
+│   ├── Makefile
 ├── java/src/
-    ├── CoarseTicketService.java
-    ├── FineTicketService.java
-    ├── Harness.java
-    ├── Main.java   
+│   ├── CoarseTicketService.java
+│   ├── FineTicketService.java
+│   ├── Harness.java
+│   ├── Main.java   
 ├── python/
-    ├── harness.py
-    ├── main.py
-    ├── ticket_service.py
-└── README.md
+│   ├── harness.py
+│   ├── main.py
+│   ├── ticket_service.py
 ├── tools/
 │   ├── generate_workload.py
 │   ├── summarize_log.py
@@ -259,7 +259,7 @@ O perfil *realistic* imita a duração de uma interação humana: a pessoa compr
 
 ### Infraestrutura de execução (*harness*)
 
-Como mencionado anteriormente, este repositório disponibiliza um conjunto de códigos-fonte, implementados em C++, Java e Python, já prontos para fazer o serviço funcionar. Essa infraestrutura de execução lê o arquivo de carga, fornece o temporizador, o *gateway* de pagamento, o executor de sessões (`SessionRunner`) e grava o *log*. Os arquivos [Harness.java](java/src/Harness.java), [harness.h](cpp/harness.h) e [harness.py](python/harness.py), localizados nos diretórios associados a cada linguagem de programação, **não devem ser modificados em hipótese alguma**. Na implementação do serviço,o temporizador `now_ns()` fornecido deve ser utilizado para o cálculo do tempo $TTL$.
+Como mencionado anteriormente, este repositório disponibiliza um conjunto de códigos-fonte, implementados em C++, Java e Python, já prontos para fazer o serviço funcionar. Essa infraestrutura de execução lê o arquivo de carga, fornece o temporizador, o *gateway* de pagamento, o executor de sessões (`SessionRunner`) e grava o *log*. Os arquivos [Harness.java](java/src/Harness.java), [harness.h](cpp/harness.h) e [harness.py](python/harness.py), localizados nos diretórios associados a cada linguagem de programação, **não devem ser modificados em hipótese alguma**. Na implementação do serviço, o temporizador fornecido (`Harness.nowNs()` em Java, `harness::now_ns()` em C++ e `now_ns()` em Python) deve ser utilizado para o cálculo do tempo $TTL$.
 
 ### Validador
 
@@ -367,10 +367,15 @@ Nesse exemplo, as 387 reservas concedidas (`H` `HELD`) levaram, em média, 0,019
 
 Implemente o trabalho em **Java, C++ ou Python, obrigatoriamente**. Após clonar este repositório, mantenha **apenas o diretório da linguagem de programação escolhida**; os demais, das outras linguagens, devem ser **removidos**. Como mencionado anteriormente, os esqueletos compilam, mas lançam exceções nos métodos a implementar.
 
-**Serviço.** Implemente a interface `TicketService` em **duas versões**:
+**Serviço.** Implemente a interface `TicketService` em **duas versões**, que diferem pela granularidade da sincronização, isto é, por quanto do estado compartilhado cada trava protege:
 
-1. *Coarse* (`CoarseTicketService`, opção `--impl coarse`): uma versão simples e correta, servindo como referência de corretude e como *baseline* para os experimentos a serem realizados.
-2. *Fine* (`FineTicketService`, opção `--impl fine`): uma versão refinada, com granularidade de sincronização mais fina e/ou mecanismos diferentes dos da primeira, para reduzir a contenção. Esta versão deve ser realmente diferente: não basta apenas renomear a primeira.
+1. *Coarse* (`CoarseTicketService`, opção `--impl coarse`): Nesta versão, um único mecanismo de exclusão mútua (um *lock* ou monitor) protege **todo** o estado do serviço (assentos, reservas de cada pessoa compradora, contadores e consulta ao mapa), de modo que qualquer operação de qualquer pessoa compradora precisa adquiri-lo. Esta é a versão mais simples de implementar e de provar correta, e serve como referência de corretude e como *baseline* dos experimentos. O limite de cobranças simultâneas (`max_payments`) continua sendo necessário e pode ser garantido com um semáforo, que não conta como refinamento.
+2. *Fine* (`FineTicketService`, opção `--impl fine`): Nesta versão, o estado é dividido de modo que operações independentes não precisem esperar umas pelas outras. Para ser considerada fina, a versão deve satisfazer pelo menos uma das condições a seguir, em relação à *coarse*:
+
+- Estado particionado: há travas distintas para partes distintas do estado (por exemplo, por assento ou por setor), de modo que compradores que disputam assentos diferentes não se bloqueiam.
+- Leitura sem exclusão mútua total: a operação `view` não bloqueia as demais operações, nem as outras consultas, por exemplo, com um *lock* de leitura e escrita ou via operações atômicaso.
+
+É importante destacar que a versão *fine* não necessariamente é melhor em termos de desempenho. Dessa forma, se essa versão não for mais rápida que a *coarse* em alguma situação, isso é um resultado válido, desde que explicado no relatório.
 
 No processo de implementação, deverão ser tomadas as seguintes decisões:
 
@@ -379,7 +384,7 @@ No processo de implementação, deverão ser tomadas as seguintes decisões:
 - como o mapa de assentos é lido sem interferir nos processos de reserva e de compra;
 - como os contadores são mantidos.
 
-**Pipeline** (`Main`). O esqueleto executa tudo sequencialmente. O *loop* deve ser substituído por um *pipeline* concorrente com:
+***Pipeline*** (`Main`). O esqueleto executa tudo sequencialmente. O *loop* deve ser substituído por um *pipeline* concorrente com:
 
 - um **produtor**, que entrega as sessões da carga, na ordem do arquivo, ao número de *threads* definido na opção `--workers`;
 - uma **fila limitada** com, no máximo, `queue_capacity` sessões esperando; quando a fila está cheia, o produtor espera, e quando está vazia, as *threads* esperam;
@@ -410,6 +415,8 @@ python3 python/main.py workloads/realistic-1.txt --workers 16 --impl fine -o eve
 python3 tools/validate_log.py workloads/realistic-1.txt events.log
 ```
 
+***Warm-up* (Java):** O esqueleto de [`Main.java`](java/src/Main.java) também aceita a opção `--warmup N` (valor padrão `0`), usada na etapa de [experimentação](#experimentação). Essa opção faz com que o *pipeline* seja executado `N` vezes sobre as primeiras 100 sessões da carga, descartando o resultado, antes da execução medida. Não é necessário implementar essa opção, mas sim apenas garantir que a execução do *pipeline* (método `execute`) crie tudo o que usa (serviço, *gateway*, filas e *threads*) a cada chamada e não deixe estado de uma chamada para a próxima. Em C++ e em Python, essa opção não é necessária e, por isso, não existe no esqueleto para essas linguagens.
+
 ### Experimentação
 
 A tarefa de experimentação consiste em realizar sucessivas execuções do programa implementado, buscando responder às seguintes perguntas:
@@ -428,8 +435,8 @@ As seguintes variáveis devem ser medidas na experimentação:
 | Métrica | Definição | Origem |
 | :------ | :-------- | :----- |
 | Tempo (`wall`) | Tempo, em segundos, desde a abertura da porta de largada até o término de todas as sessões, desconsiderando os tempos de criação das *threads* e o da leitura da carga. | Campo `wall_ns` da linha `RUN` do *log* (em nanossegundos), que também aparece na saída do validador e do sumarizador de *log* |
-| Vazão (*throughput*) | Sessões atendidas por tempo em segundos | Calculada pelo validador e pelo resumidor de log |
-| Aceleração (*speed-up*) | $S(n) = T(1) / T(n)$ em que $T(n)$ é o tempo médio com $n$ *threads*, da mesma versão do serviço e da mesma carga | Calculada a partir das médias |
+| Vazão (*throughput*) | Sessões atendidas por tempo em segundos | Calculada pelo validador e pelo sumarizador de *log* |
+| Aceleração (*speed-up*) | $S(n) = T(1) / T(n)$, em que $T(n)$ é o tempo médio com $n$ *threads*, da mesma versão do serviço e da mesma carga | Calculada a partir das médias |
 | Tempo por operação | Duração de cada chamada, por tipo de operação e resultado | Linhas `OP` do *log*, resumidas pelo sumarizador de *log* |
 
 #### Fatores
@@ -440,7 +447,7 @@ Os experimentos a serem realizados neste trabalho tratam de combinações dos tr
 | :---- | :----- | :---------------- |
 | Número de threads | Pelo menos cinco valores, incluindo 1 e um valor maior que o número de núcleos de processamento disponíveis na máquina de execução (por exemplo, 1, 2, 4, 8 e 16) | Opção `--workers` do programa. Com 1 thread, o *pipeline* opera sequencialmente e serve como base de comparação. |
 | Versão do serviço | `coarse` e `fine` | Opção `--impl` do programa |
-| Perfil de carga	| `realistic` e `stress` | Arquivo de carga gerado com `--profile` |
+| Perfil de carga | `realistic` e `stress` | Arquivo de carga gerado com `--profile` |
 
 Para os experimentos, **as cargas devem ser geradas uma única vez** e os mesmos arquivos devem ser sempre utilizados em todas as execuções. Para que o total seja viável, os seguintes comandos devem ser utilizados:
 
@@ -455,25 +462,25 @@ Devem ser realizados três experimentos conforme descritos a seguir:
 
 | ID | Foco | Pergunta | O que varia | Elementos fixos | Execuções |
 | -- | :--- | :------- | :---------- | :-------------- | :-------- |
-| E1 | Escalabilidade | Como o tempo de execução varia com o número de *threads*? | Número de *threads* (5 valores) | Versão (2) e perfil | 2 versões × 2 perfis × 5 valores × 10 repetições = 200 |
-| E2 | Comparação das versões | A versão *fine* é superior à *coarse*? Em que condições? | Versão (2) | Número de *threads* e perfil | 0 (usa os dados do experimento E1) |
-| E3 | Tempo por operação | Onde o tempo é gasto no serviço? | | Uma configuração por versão | 0 (usa os *logs* do experimento E1) |
+| E1 | Escalabilidade | Como o tempo de execução varia com o número de *threads*? | Número de *threads* (5 valores) | Versão e perfil | 2 versões × 2 perfis × 5 valores × 10 repetições = 200 |
+| E2 | Comparação das versões | A versão *fine* é superior à *coarse*? Em que condições? | Versão | Número de *threads* e perfil | 0 (usa os dados do experimento E1) |
+| E3 | Tempo por operação | Onde o tempo é gasto no serviço? | Versão | Uma configuração por versão | 0 (usa os *logs* do experimento E1) |
 
 **Experimentos E1 e E2 - Escalabilidade e comparação das versões:** Estes experimentos dizem respeito à mesma coleta de dados, porém sob duas perspectivas distintas que, juntas, respondem à pergunta central deste trabalho. No experimento E1, a matriz 2 versões × 2 perfis × 5 valores deve ser executada 10 vezes, e cada versão deve ser examinada separadamente quanto à variação do tempo e da vazão em função do número de *threads*, devendo ainda ser calculado o *speed-up* e identificada a situação em que ele deixa de crescer. No experimento E2, cada número de *threads* deve ser examinado separadamente, e as duas versões (*fine* e *coarse*) devem ser comparadas, calculando-se a razão entre os tempos médios e verificando-se se a diferença é maior que a variação (o desvio padrão). A pergunta não é só "qual é mais rápida", e sim em que condições a versão refinada compensa a complexidade extra. Há condições em que ela não compensa, e identificá-las é um resultado válido.
 
-**Experimento E3 - Tempo por operação:** Para ao menos uma configuração de cada versão (por exemplo, `--workers 32` no perfil `stress`), deve-se resumir o *log* com o sumarizador de *log* e comparar as durações das operações `view`, `hold` e `purchase` entre as duas versões. O tempo total indica quanto tempo o serviço leva, e esta análise mostra onde (por exemplo, se as operações de leitura ficam mais lentas quando as de escrita disputam o mesmo *lock*).
+**Experimento E3 - Tempo por operação:** Para ao menos uma configuração de cada versão (por exemplo, o maior valor de `--workers` usado no experimento E1, no perfil `stress`), deve-se resumir o *log* com o sumarizador de *log* e comparar as durações das operações `view`, `hold` e `purchase` entre as duas versões. O tempo total indica quanto tempo o serviço leva, e esta análise mostra onde (por exemplo, se as operações de leitura ficam mais lentas quando as de escrita disputam o mesmo *lock*).
 
-Os resultados decorrentes desses três experimentos devem constar no relatório (ver seção [Relato](#relato)). Para os experimentos E1 e E2, deve ser incluída uma tabela por perfil, com a média e o desvio padrão do tempo e da vazão de cada versão para cada número de *threads*, além de dois gráficos: um para o tempo (ou a vazão) em função do número de *threads*, com as duas versões, e outro para o *speed-up*. Para o experimento E3, deve ser incluída uma tabela com a distribuição das durações das operações na configuração escolhida. Em todos os casos, devem ser informados quantos execuções foram feitas e quantas passaram na validação.
+Os resultados decorrentes desses três experimentos devem constar no relatório (ver seção [Relato](#relato)). Para os experimentos E1 e E2, deve ser incluída uma tabela por perfil, com a média e o desvio padrão do tempo e da vazão de cada versão para cada número de *threads*, além de dois gráficos: um para o tempo (ou a vazão) em função do número de *threads*, com as duas versões, e outro para o *speed-up*. Para o experimento E3, deve ser incluída uma tabela com a distribuição das durações das operações na configuração escolhida. Em todos os casos, devem ser informados quantas execuções foram feitas e quantas passaram na validação.
 
 #### Execução dos experimentos
 
-Como o experimento E1 envolve centenas de execuções, é interessante automatizar sua execução; registrar os resultados manualmente é altamente desaconselhável. Por exemplo, pode ser elaborado um *script* (em *shell*, Python ou o que preferir) que, para cada configuração, executa o programa, executa o validador sobre o *log* e registra o tempo e se a validação passou. Se alguma execução falhar na validação, o serviço deve ser interrompido e corrigido.
+Como o experimento E1 envolve centenas de execuções, é interessante automatizar sua execução; registrar os resultados manualmente é altamente desaconselhável. Por exemplo, pode ser elaborado um *script* (em *shell*, Python ou o que preferir) que, para cada configuração, executa o programa, executa o validador sobre o *log* e registra o tempo e se a validação passou.
 
 Os *logs* também devem ser guardados, pois a análise do tempo por operação parte deles. Cada configuração (versão × perfil × número de threads) deve ser executada pelo menos **10 vezes**, e as execuções devem ser **alternadas**: em vez de fazer as 10 repetições de uma configuração e depois as da seguinte, elas **devem ser intercaladas** (por exemplo, *coarse*, *fine*, *coarse*, e assim sucessivamente), de modo que qualquer oscilação da máquina ao longo do tempo (temperatura, outros processos) afete ambas as versões igualmente.
 
 Para controlar o ambiente de execução, recomenda-se que outros programas em execução sejam encerrados e que o computador seja conectado à tomada de energia e não seja utilizado durante as medições. O relatório deve registrar o processador, o número de núcleos de processamento, a quantidade de memória RAM instalada, o sistema operacional em execução, a versão da linguagem e do compilador (ou da máquina virtual Java, se for o caso) e as opções utilizadas.
 
-Nas primeiras execuções, a máquina virtual Java ainda interpreta e compila o código, e os tempos são maiores e mais variáveis, o que distorce a média. Como cada execução do programa é um novo processo, ele sempre começaria "frio". Para medir o programa já aquecido, o código principal deve executar o *pipeline* várias vezes no mesmo processo (por exemplo, com a opção `--repetitions N`), cada vez com um serviço, um *gateway* e uma lista de registros novos, e descartar as primeiras execuções, as quais devem ser informadas no relatório. Em C++ e em Python, não é necessário descartar execuções, mas a primeira pode ser mais lenta por efeitos de *cache* do sistema, então possivelmente é válido executá-la uma vez antes de efetivamente iniciar a medição.
+Nas primeiras execuções, a máquina virtual Java ainda interpreta e compila o código, fazendo com que os tempos sejam maiores e mais variáveis e, consequentemente, distorcendo a média. Por isso, em Java, toda execução do experimento deve usar `--warmup N`: o programa executa o *pipeline* `N` vezes, sobre as primeiras 100 sessões e sem efetivamente medir, e somente a partir da próxima execução mede e grava o *log*. Para que o aquecimento não encareça demais as execuções com poucas *threads*, ele pode ser feito sobre uma carga reduzida (por exemplo, as primeiras 100 sessões do arquivo) em vez da carga completa, a escolha devendo ser reportada informada no relatório. Dessa forma, cada execução continua produzindo **um único tempo e um único *log***, exatamente como em C++ e em Python. Em C++ e em Python, não é necessário aquecimento, mas a primeira execução pode ser mais lenta por efeitos de *cache* do sistema, então é válido descartar uma execução inicial antes de começar a coleta, também informando isso no relatório.
 
 #### Tratamento dos dados
 
@@ -487,7 +494,7 @@ Uma vez realizadas as tarefas de implementação e de experimentação, deverá 
 
 1. **Identificação e ambiente**: nomes dos membros da equipe envolvida, linguagem de programação empregada, o ambiente de execução utilizado nas atividades de implementação e de experimentação e as instruções para compilação e execução do programa.
 2. **Projeto da sincronização**: descrição do mecanismo de sincronização escolhido nas versões *coarse* e *fine*, da justificativa da escolha e das alternativas consideradas e descartadas.
-3. **Metodologia**: o que foi medido nos experimentos, como, quantas repetições, o tratamento do *warm-up* (no caso da linguagem de programação Java) e como a validação foi realizada.
+3. **Metodologia**: o que foi medido nos experimentos, como, quantas repetições, o tratamento do *warm-up* (no caso de Java, o valor de `--warmup` e a carga utilizada no aquecimento) e como a validação foi realizada.
 4. **Resultados**: tabelas e gráficos com média e desvio padrão.
 5. **Análise**: explicação dos resultados, e não uma mera descrição deles, buscando responder às seguintes perguntas:
 
