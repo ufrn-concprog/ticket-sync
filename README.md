@@ -1,10 +1,10 @@
 # Trabalho Prático: Serviço de Bilheteria
 
-<sub>Última atualização: 19/10/2026</sub><br/>
-
 [![Java](https://img.shields.io/badge/Java-17%2B-orange?logo=java)](https://www.oracle.com/java/technologies/javase-downloads.html)
 [![C++](https://img.shields.io/badge/C++-20%2B-green?logo=c%2B%2B)](https://en.cppreference.com/w/cpp/20)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org)
+
+<sub>Última atualização: 19/10/2026</sub><br/>
 
 > **Declaração sobre o uso de Inteligência Artificial generativa.** A concepção deste trabalho prático (o tema, o problema, os objetivos de aprendizagem, as regras do serviço e os critérios de avaliação) foi realizada pelo docente. A presente especificação e os códigos-fonte disponibilizados neste repositório foram produzidos com o auxílio de uma ferramenta de Inteligência Artificial generativa (mais precisamente, o Claude, da Anthropic, no modelo Sonnet 5.5), sob a direção, revisão e validação do docente, que permanece integralmente responsável pelos artefatos produzidos e por seu conteúdo. O material foi revisado e testado pelo docente com soluções de referência nas linguagens de programação Java, C++ e Python, mas ainda pode haver erros ou eventuais inconsistências. Destaque-se que esta declaração **não altera** a política de colaboração e de uso de ferramentas de Inteligência Artificial para a entrega a ser realizada, conforme estabelecido na seção [Autoria e política de colaboração](#autoria-e-política-de-colaboração).
 
