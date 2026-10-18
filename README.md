@@ -245,7 +245,7 @@ Cada um desses três comandos cria um arquivo de carga. As opções do gerador s
 
 Os perfis *realistic* e *stress* têm o mesmo evento (2000 assentos, 20 setores de 100 assentos, limite de 4 reservas por comprador) e os mesmos tipos de compradores. O que muda entre eles é o ritmo e os limites, de modo a representar duas situações diferentes:
 
-|    | `realistic` | `stress` |
+| | *realistic* | *stress* |
 | :- | :---------- | :------- |
 | Pausa de reflexão `T` (comprador comum) | 5 a 120 ms | 0 a 30 ms |
 | Pausa do comprador lento | 250 a 400 ms | 110 a 150 ms |
@@ -415,7 +415,7 @@ python3 python/main.py workloads/realistic-1.txt --workers 16 --impl fine -o eve
 python3 tools/validate_log.py workloads/realistic-1.txt events.log
 ```
 
-***Warm-up* (Java):** O esqueleto de [`Main.java`](java/src/Main.java) também aceita a opção `--warmup N` (valor padrão `0`), usada na etapa de [experimentação](#experimentação). Essa opção faz com que o *pipeline* seja executado `N` vezes sobre as primeiras 100 sessões da carga, descartando o resultado, antes da execução medida. Não é necessário implementar essa opção, mas sim apenas garantir que a execução do *pipeline* (método `execute`) crie tudo o que usa (serviço, *gateway*, filas e *threads*) a cada chamada e não deixe estado de uma chamada para a próxima. Em C++ e em Python, essa opção não é necessária e, por isso, não existe no esqueleto para essas linguagens.
+***Warm-up* (apenas em Java).** O esqueleto de [`Main.java`](java/src/Main.java) também aceita a opção `--warmup N` (valor padrão `0`), usada na etapa de [experimentação](#experimentação). Essa opção faz com que o *pipeline* seja executado `N` vezes sobre as primeiras 100 sessões da carga, descartando o resultado, antes da execução medida. Não é necessário implementar essa opção, mas sim apenas garantir que a execução do *pipeline* (método `execute`) crie tudo o que usa (serviço, *gateway*, filas e *threads*) a cada chamada e não deixe estado de uma chamada para a próxima. Em C++ e em Python, essa opção não é necessária e, por isso, não existe no esqueleto para essas linguagens.
 
 ### Experimentação
 
