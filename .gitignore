@@ -4,6 +4,7 @@ out/
 *.o
 __pycache__/
 *.pyc
+.ruff_cache/
 
 # Cargas e logs gerados (podem ser recriados com tools/generate_workload.py)
 workloads/*.txt
