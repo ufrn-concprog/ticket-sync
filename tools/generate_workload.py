@@ -1,7 +1,7 @@
 """Gerador de carga.
 
-Produz um arquivo de texto (o "trace") que descreve, de forma determinística
-a partir de uma semente, as sessões de compradores que chegam ao serviço.
+Produz um arquivo de texto que descreve, de forma determinística, 
+as sessões de compradores que chegam ao serviço.
 O mesmo arquivo é lido pelas versões em Java, C++ e Python e pelo validador.
 
 Uso:
