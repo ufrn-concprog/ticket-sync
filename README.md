@@ -498,11 +498,11 @@ Uma vez realizadas as tarefas de implementação e de experimentação, deverá 
 4. **Resultados**: tabelas e gráficos com média e desvio padrão.
 5. **Análise**: explicação dos resultados, e não uma mera descrição deles, buscando responder às seguintes perguntas:
 
-- Por que a versão *fine* é superior (ou não) à versão *coarse* em cada perfil?
-- O que acontece quando o número de *threads* excede o número de núcleos de processamento disponíveis?
-- Por que o perfil *realistic* esconde diferenças que o perfil *stress* revela?
-- Houve algum resultado que contrariou as expectativas?
-- Em Python, qual o efeito do GIL nas medições?
+   - Por que a versão *fine* é superior (ou não) à versão *coarse* em cada perfil?
+   - O que acontece quando o número de *threads* excede o número de núcleos de processamento disponíveis?
+   - Por que o perfil *realistic* esconde diferenças que o perfil *stress* revela?
+   - Houve algum resultado que contrariou as expectativas?
+   - Em Python, qual o efeito do GIL nas medições?
 
 6. **Limitações e trabalhos futuros**: o que os testes realizados não cobrem e o que poderia ser feito com mais tempo.
 
