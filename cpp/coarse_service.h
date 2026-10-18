@@ -80,7 +80,7 @@ private:
     /** @brief Referência ao gateway utilizado para processar pagamentos */
     harness::PaymentGateway& gateway_;
     
-    // TODO: implementar o estado compartilhado e os mecanismos de sincronização.
+    // TODO: implementar o estado compartilhado e os mecanismos de sincronização
 };
 
 #endif
