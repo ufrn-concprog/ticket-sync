@@ -6,7 +6,7 @@
 
 <sub>Última atualização: 19/10/2026</sub><br/>
 
-> **Declaração sobre o uso de Inteligência Artificial generativa.** A concepção deste trabalho prático (o tema, o problema, os objetivos de aprendizagem, as regras do serviço e os critérios de avaliação) foi realizada pelo docente. A presente especificação e os códigos-fonte disponibilizados neste repositório foram produzidos com o auxílio de uma ferramenta de Inteligência Artificial generativa (mais precisamente, o Claude, da Anthropic, no modelo Sonnet 5.5), sob a direção, revisão e validação do docente, que permanece integralmente responsável pelos artefatos produzidos e por seu conteúdo. O material foi revisado e testado pelo docente com soluções de referência nas linguagens de programação Java, C++ e Python, mas ainda pode haver erros ou eventuais inconsistências. Destaque-se que esta declaração **não altera** a política de colaboração e de uso de ferramentas de Inteligência Artificial para a entrega a ser realizada, conforme estabelecido na seção [Autoria e política de colaboração](#autoria-e-política-de-colaboração).
+> **Declaração sobre o uso de Inteligência Artificial generativa.** A concepção deste trabalho prático (o tema, o problema, os objetivos de aprendizagem, as regras do serviço e os critérios de avaliação) foi realizada pelo docente. A presente especificação e os códigos-fonte disponibilizados neste repositório foram produzidos com o auxílio de uma ferramenta de Inteligência Artificial generativa (mais precisamente, o Claude, da Anthropic, no modelo Sonnet 5.5), sob a direção, revisão e validação do docente, que permanece integralmente responsável pelos artefatos produzidos e por seu conteúdo. O material foi revisado e testado pelo docente, com soluções de referência nas linguagens de programação Java, C++ e Python, mas ainda pode haver eventuais erros ou inconsistências. Destaque-se que esta declaração **não altera** a política de colaboração e de uso de ferramentas de Inteligência Artificial para a entrega a ser realizada, conforme estabelecido na seção [Autoria e política de colaboração](#autoria-e-política-de-colaboração).
 
 ## Sumário
 
@@ -33,7 +33,7 @@ O objetivo deste trabalho prático é projetar, implementar e avaliar o núcleo 
 
 ## O problema
 
-Na abertura das vendas de um espetáculo em um teatro, centenas de compradores podem acessar o mesmo mapa de assentos simultaneamente. A procura concentra-se nos melhores lugares e vários compradores disputam o mesmo assento. O serviço precisa garantir que cada assento seja vendido no máximo uma vez, mesmo durante essa disputa, e continuar respondendo rapidamente a quem apenas consulta o mapa.
+Na abertura das vendas de um espetáculo em um teatro, centenas de compradores podem acessar simultaneamente o mesmo mapa de assentos. A procura concentra-se nos melhores lugares e vários compradores disputam o mesmo assento. O serviço precisa garantir que cada assento seja vendido no máximo uma vez, mesmo durante essa disputa, e continuar respondendo rapidamente a quem apenas consulta o mapa.
 
 O funcionamento desse serviço se assemelha ao de bilheterias reais:
 
@@ -42,13 +42,13 @@ O funcionamento desse serviço se assemelha ao de bilheterias reais:
 3. A pessoa compradora adquire cada assento reservado. O pagamento passa por um *gateway* externo que aceita apenas um número limitado de cobranças simultâneas (`max_payments`), e o serviço deve respeitar esse limite.
 4. A pessoa compradora também pode liberar uma reserva por conta própria.
 
-Para melhor atender às múltiplas requisições, cada pessoa compradora é atendida por uma *thread* que executa suas operações sequencialmente, enquanto compradores diferentes são atendidos de forma concorrente. A compra de um grupo **não** é atômica: cada assento é reservado e comprado individualmente e é aceitável que a pessoa compradora consiga apenas parte do que queria.
+Para atender melhor às múltiplas requisições, cada pessoa compradora é atendida por uma *thread* que executa suas operações sequencialmente, enquanto diferentes compradores são atendidos concorrentemente. A compra de um grupo **não** é atômica: cada assento é reservado e comprado individualmente e é aceitável que a pessoa compradora consiga apenas parte do que queria.
 
 ## Funcionamento do serviço
 
 ### Estrutura do arquivo de carga
 
-O serviço de bilheteria a ser implementado não tem usuários reais. O que se consome é um arquivo de texto, chamado **carga** (*workload*), que descreve todas as ações que a pessoa compradora vai realizar durante a venda, sendo, assim, uma espécie de roteiro de execução. O programa lê esse roteiro, cria as *threads* para representar os compradores e o resultado é registrado em um *log*.
+O serviço de bilheteria a ser implementado não tem usuários reais. O que se consome é um arquivo de texto, chamado **carga** (*workload*), que descreve todas as ações que a pessoa compradora realizará durante a venda, servindo, assim, como um roteiro de execução. O programa lê esse roteiro, cria as *threads* para representar os compradores e o resultado é registrado em um *log*.
 
 É importante destacar que a carga é apenas a entrada do programa: ela descreve o que cada pessoa compradora tenta fazer, e não o que acontece. O resultado quanto a quem efetivamente reserva cada assento depende da disputa entre as *threads* e é decidido pelo serviço.
 
@@ -61,7 +61,7 @@ O arquivo de carga contém uma linha por registro. Linhas em branco e linhas com
 
 ### Parâmetros
 
-O comportamento do serviço depende de oito parâmetros, fornecidos na linha iniciada com o prefixo `PARAMS` no arquivo de carga. Esses parâmtros são:
+O comportamento do serviço depende de oito parâmetros, fornecidos na linha que começa com o prefixo `PARAMS` no arquivo de carga. Esses parâmetros são:
 
 | Parâmetro | Significado |
 | :-------- | :---------- |
@@ -103,7 +103,7 @@ Nesse exemplo:
 - Na Sessão 0, a pessoa compradora apenas olha o mapa dos Setores 0, 14 e 3 e abandona o processo. É um tipo de pessoa usuária que apenas navega pelo serviço (operação mais comum) e é o que mais pesa na operação `view`.
 - Na Sessão 1, a pessoa compradora consulta o Setor 0, tenta reservar os assentos 77 e 78, pensa por 94 ms e então paga por ambos. O primeiro pagamento é aprovado e o segundo recusado.
 - Na Sessão 2, a pessoa compradora consulta o Setor 0, reserva o assento 69, pensa por 120 ms e, em seguida, libera esse assento sem finalizar efetivamente a compra.
-- Na Sessão 3, a pessoa compradora também consulta o Setor 0 e reserva o assento 69, mas demora 347 ms para pagar pela reserva, o que excede o `ttl_ms` de 200 ms. Se a reserva existiu, ela terá vencido.
+- Na Sessão 3, a pessoa compradora também consulta o Setor 0 e reserva o assento 69, mas leva 347 ms para efetuar o pagamento da reserva, o que excede o `ttl_ms` de 200 ms. Se a reserva existiu, ela terá vencido.
 
 É importante destacar que as sessões são independentes entre si, mas disputam os mesmos assentos. As Sessões 2 e 3 do exemplo acima disputam o assento 69 do Setor 0. Além disso, a ordem em que o serviço as atende varia de uma execução para outra, e é aí que as condições de corrida aparecem. A ordem das linhas `SESSION` no arquivo de carga é a ordem em que o produtor as entrega às *threads*, mas isso não determina a ordem em que elas terminam.
 
@@ -131,13 +131,13 @@ O serviço é um objeto que implementa a interface `TicketService` definida na i
 | `stats()` | Esta não é uma ação do processo de reserva e compra; ela apenas devolve os contadores | `Main`, uma vez, no fim da execução |
 | `start()` e `close()` | Estas não são ações de compra, mas sim para iniciar e encerrar o serviço | `Main`, uma vez cada |
 
-O objeto `SessionRunner` fornecido lê as operações de cada sessão da carga, na ordem, e as chama no serviço. Entre uma operação e outra, ele pode ser suspenso (linhas `T` da carga), simulando o tempo que a pessoa compradora leva para decidir sobre a compra. Cada *thread* executa uma sessão por vez, então muitas *threads* chamam as operações do mesmo objeto de serviço simultaneamente, e por isso o estado interno do serviço precisa de sincronização.
+O objeto `SessionRunner` fornecido lê as operações de cada sessão da carga, na ordem, e as chama no serviço. Entre uma operação e outra, ele pode ser suspenso (linhas `T` da carga), simulando o tempo que a pessoa compradora leva para decidir sobre a compra. Cada *thread* executa uma sessão por vez, então muitas *threads* chamam as operações do mesmo objeto de serviço simultaneamente; por isso, o estado interno do serviço precisa de ser sincronizado.
 
 As operações podem ter os seguintes argumentos:
 
 - **`buyer`:** É um número inteiro que identifica a pessoa compradora, definido na sessão do arquivo de carga. Uma sessão corresponde a uma pessoa compradora, e uma pessoa compradora é atendida por uma única *thread*; logo, as operações de uma mesma pessoa compradora nunca se sobrepõem no tempo. Por outro lado, operações de compradores diferentes se sobrepõem o tempo todo.
 - **`seat` e `sector`:** São números inteiros definidos por `seats` e `section_size` no mapa de parâmetros.
-- **`card_ok`:** Indica se o pagamento da pessoa compradora será aprovado (`true`) ou recusado (`false`). Na operação `purchase`, ele deve ser repassado ao *gateway* sem alterá-lo, e ele decide o resultado da cobrança, não cabendo ao serviço determiná-lo.
+- **`card_ok`:** Indica se o pagamento da pessoa compradora será aprovado (`true`) ou recusado (`false`). Na operação `purchase`, ele deve ser repassado ao *gateway* sem alterá-lo, que decide o resultado da cobrança; não cabe ao serviço determiná-lo.
 
 Cada operação retorna um código de resultado, escrito exatamente como `HELD`, `TAKEN`, `SOLD`, `NOHOLD` etc. O `SessionRunner` grava esse código no *log* e o validador o confere. As constantes já estão definidas no código fornecido para a infraestrutura de execução. Cada uma das operações é detalhada a seguir.
 
@@ -150,7 +150,7 @@ Cada operação retorna um código de resultado, escrito exatamente como `HELD`,
 | A pessoa compradora já tem `max_holds` reservas válidas | `LIMIT`: a pessoa compradora atingiu o limite do grupo |
 | Nenhuma das anteriores | `HELD`: o assento fica reservado à pessoa compradora do instante de tempo atual mais `ttl_ms` |
 
-Reservas já consumidas por compra ou liberação, e reservas vencidas, não contam para o limite. Por exemplo, com `max_holds=4`, uma pessoa compradora que já reservou os assentos 10, 11, 12 e 13 recebe `LIMIT` ao tentar o 14, mas recebe `ALREADY` ao tentar o 12 novamente, pois o assento é verificado antes da verificação do limite.
+Reservas já consumidas por compra ou liberação, e reservas vencidas, não contam para o limite. Por exemplo, com `max_holds=4`, uma pessoa compradora que já reservou os assentos 10, 11, 12 e 13 recebe `LIMIT` ao tentar reservar o 14, mas recebe `ALREADY` ao tentar reservar o 12 novamente, pois o assento é verificado antes da verificação do limite.
 
 **`purchase(buyer, seat, card_ok)`:** Esta operação realiza o pagamento de um assento reservado. Sem esta operação, a reserva expira.
 
@@ -159,9 +159,9 @@ Reservas já consumidas por compra ou liberação, e reservas vencidas, não con
 - Com reserva válida, o assento passa ao estado *em pagamento*: ninguém mais o obtém enquanto a cobrança durar, mesmo que `ttl_ms` termine nesse intervalo.
 - Caso o pagamento tenha sido aprovado, o assento passa ao estado *vendido* e a operação retorna `SOLD`. Caso o pagamento tenha sido recusado, o assento volta ao estado *disponível* e o resultado da operação é `DECLINED`.
 
-**`release(buyer, seat)`:**: Esta operação refere-se à ação de uma pessoa compradora que desistiu da compra do assento reservado. Ela retorna `RELEASED` se a pessoa compradora tinha uma reserva válida do assento, que passa ao estado *disponível*, ou `NOHOLD` caso a pessoa compradora nunca tenha reservado, já tenha liberado, a reserva já tenha expirado ou o assento seja de outra pessoa.
+**`release(buyer, seat)`:**: Esta operação refere-se à ação de uma pessoa compradora que desistiu da compra do assento reservado. Ela retorna `RELEASED` se a pessoa compradora tinha uma reserva válida do assento, que passa ao estado *disponível*, ou `NOHOLD` caso a pessoa compradora nunca tenha reservado, a reserva já tenha sido liberada, a reserva já tenha expirado ou o assento seja de outra pessoa.
 
-**`view(sector)`:** Esta operação realiza a consulta do mapa de um setor, retornando três números: quantos assentos do setor estão disponíveis, reservados (reservas válidas, incluindo os assentos em pagamento) e vendidos. Reservas vencidas contam como disponíveis. Nos códigos fornecidos, o resultado é um objeto com os campos `available`, `held` e `sold` (`SectionView` em Java e C++) ou a tupla `(available, held, sold)`, nessa ordem, em Python. Cada assento do setor deve ser contado exatamente uma vez, de modo que os três números somem o tamanho do setor. O resultado não precisa ser atômico em todo o setor: se um assento mudar de estado durante a contagem, vale a contagem de antes ou a de depois. É a operação mais frequente, e é ela que mostra o custo de uma sincronização excessiva para as *threads* que realizam apenas operações de leitura.
+**`view(sector)`:** Esta operação realiza a consulta do mapa de um setor, retornando três números: quantos assentos do setor estão disponíveis, reservados (reservas válidas, incluindo os assentos em pagamento) e vendidos. Reservas vencidas contam como disponíveis. Nos códigos fornecidos, o resultado é um objeto `SessionView` com os campos `available`, `held` e `sold`, em Java e C++, ou a tupla `(available, held, sold)`, nessa ordem, em Python. Cada assento do setor deve ser contado exatamente uma vez, de modo que os três números somem o tamanho do setor. O resultado não precisa ser atômico em todo o setor: se um assento mudar de estado durante a contagem, vale a contagem de antes ou a de depois. É a operação mais frequente, e é ela que mostra o custo de uma sincronização excessiva para as *threads* que realizam apenas operações de leitura.
 
 **`stats` e contadores:** Ao final da execução, `Main` chama `stats()`, que deve informar:
 
@@ -173,7 +173,7 @@ Reservas já consumidas por compra ou liberação, e reservas vencidas, não con
 | `purchases_declined` | Quantas chamadas da operação `purchase` retornaram `DECLINED` |
 | `views` | Quantas chamadas da operação `view` foram feitas |
 
-Nos códigos fornecidos, o resultado de `stats()` tem exatamente estes cinco campos: em Python, um `dict` com as chaves acima; em C++, um objeto `Stats` com os mesmos nomes; em Java, um objeto Stats com os mesmos nomes em *camel case* (`holdsGranted`, `holdsRejected`, `purchasesDeclined`). Esses contadores são atualizados por várias *threads* simultaneamente e devem corresponder exatamente ao que ocorreu: o validador os compara com o *log*, e uma atualização perdida é considerada uma falha.
+Nos códigos fornecidos, o resultado de `stats()` tem exatamente estes cinco campos: em Python, um `dict` com as chaves acima; em C++, um objeto `Stats` com os mesmos nomes; em Java, um objeto `Stats` com os mesmos nomes em *camel case* (`holdsGranted`, `holdsRejected`, `purchasesDeclined`). Esses contadores são atualizados por várias *threads* simultaneamente e devem corresponder exatamente ao que ocorreu: o validador os compara com o *log*, e uma atualização perdida é considerada uma falha.
 
 ## Material fornecido
 
@@ -182,7 +182,7 @@ Para que o foco do trabalho seja na sincronização, este repositório fornece u
 - um **gerador de carga**, que cria o roteiro do que os compradores vão fazer;
 - o código da **infraestrutura de execução** (*harness*) que lê esse roteiro, simula o *gateway* de pagamento, executa as operações de cada pessoa compradora no serviço e grava um registro (*log*) do que aconteceu;
 - um **validador**, que lê o roteiro e o *log* e aponta violações das regras do serviço; e
-- esqueletos do serviço e do programa principal em Java, C++ e Python, a serem completados; os esqueletos compilam e executam, porém as operações do serviço lançam uma exceção ("TODO") até que sejam implementadas.
+- **esqueletos do serviço e do programa principal** em Java, C++ e Python, a serem completados; os esqueletos compilam e executam, porém as operações do serviço lançam uma exceção ("TODO") até que sejam implementadas.
 
 O repositório está organizado da seguinte forma e os seus elementos principais são descritos a seguir.
 
@@ -215,7 +215,7 @@ ticket-sync/
 
 ### Gerador de carga
 
-O gerador de carga cria um arquivo de texto de forma determinística a partir de um *perfil*, considerando, de forma aleatória, os seguintes tipos de pessoa compradora com base em proporções fixas:
+O gerador de carga cria um arquivo de texto de forma determinística a partir de um **perfil**, considerando, de forma aleatória, os seguintes tipos de pessoa compradora com base em proporções fixas:
 
 | Tipo | Comportamento na carga | Proporção aproximada |
 | :--- | :--------------------- | :------------------- |
@@ -260,7 +260,7 @@ O perfil *realistic* imita a duração de uma interação humana: a pessoa compr
 
 ### Infraestrutura de execução (*harness*)
 
-Como mencionado anteriormente, este repositório disponibiliza um conjunto de códigos-fonte, implementados em C++, Java e Python, já prontos para fazer o serviço funcionar. Essa infraestrutura de execução lê o arquivo de carga, fornece o temporizador, o *gateway* de pagamento, o executor de sessões (`SessionRunner`) e grava o *log*. Os arquivos [Harness.java](java/src/Harness.java), [harness.h](cpp/harness.h) e [harness.py](python/harness.py), localizados nos diretórios associados a cada linguagem de programação, **não devem ser modificados em hipótese alguma**. Na implementação do serviço, o temporizador fornecido (`Harness.nowNs()` em Java, `harness::now_ns()` em C++ e `now_ns()` em Python) deve ser utilizado para o cálculo do tempo $TTL$.
+Como mencionado anteriormente, este repositório disponibiliza um conjunto de códigos-fonte, implementados em C++, Java e Python, já prontos para fazer o serviço funcionar. Essa infraestrutura de execução lê o arquivo de carga, fornece o temporizador, o *gateway* de pagamento, o executor de sessões (`SessionRunner`) e grava o *log*. Os arquivos [Harness.java](java/src/Harness.java), [harness.h](cpp/harness.h) e [harness.py](python/harness.py), localizados nos diretórios associados a cada linguagem de programação, **não devem ser modificados em hipótese alguma**. Na implementação do serviço, o temporizador fornecido (`Harness.nowNs()` em Java, `harness::now_ns()` em C++ e `now_ns()` em Python) deve ser utilizado para calcular o tempo $TTL$.
 
 ### Validador
 
@@ -288,7 +288,7 @@ STATS	sold=236	holds_granted=387	holds_rejected=360	purchases_declined=16	views=
 RUN	workers=32	wall_ns=1184389066
 ```
 
-Nesse exemplo, a segunda linha indica que a pessoa compradora com ID 62, na operação de índice 1 da sua sessão, chamou `hold` no assento 35; a chamada começou em 87 994 407 ns, terminou em 88 002 285 ns e retornou `HELD`, o que significa que o assento passou ao estado *reservado*. O índice 2 não aparece no *log* porque é uma pausa (`T`), que não gera registro. A terceira linha refere-se à compra do mesmo assento, que resultou em `SOLD` (estado *vendido*), e a quarta linha diz respeito ao registro da tentativa de pagamento no *gateway*, cujo intervalo está contido no da compra. A linha `RUN` serve de sinal de que o programa terminou, de modo que um *log* sem ela indica uma execução que travou ou foi interrompida.
+Nesse exemplo, a segunda linha indica que a pessoa compradora com ID 62, na operação de índice 1 da sua sessão, chamou `hold` no assento 35; a chamada começou em 87 994 407 ns, terminou em 88 002 285 ns e retornou `HELD`, o que significa que o assento passou ao estado *reservado*. O índice 2 não aparece no *log* porque é uma pausa (`T`), que não gera registro. A terceira linha refere-se à compra do mesmo assento, que resultou em `SOLD` (estado *vendido*), e a quarta linha diz respeito ao registro da tentativa de pagamento no *gateway*, cujo intervalo está contido no da compra. A linha `RUN` serve como sinal de que o programa terminou; assim, um *log* sem ela indica que a execução travou ou foi interrompida.
 
 Para executar o validador, o seguinte comando deve ser executado, informando os arquivos de carga e de *log*, **nessa ordem**:
 
@@ -296,7 +296,7 @@ Para executar o validador, o seguinte comando deve ser executado, informando os 
 python3 tools/validate_log.py workloads/realistic-1.txt events.log
 ```
 
-É essencial usar a mesma carga com a qual o log foi gerado, pois o validador compara as duas cargas. A opção `--max-print N` define quantos exemplos de cada categoria são exibidos (o padrão é 5). Numa execução sem violações, a saída esperada seria:
+É essencial usar a mesma carga com a qual o log foi gerado, pois o validador compara as duas cargas. A opção `--max-print N` define quantos exemplos de cada categoria são exibidos (o padrão é 5). Em uma execução sem violações, a saída esperada seria:
 
 ```text
 sessões: 400  operações registradas: 2424/2424  assentos vendidos: 236  cobranças: 252  pico de pagamentos simultâneos: 8 (limite 8)
@@ -346,7 +346,7 @@ Para utilizar o sumarizador, o seguinte comando deve ser utilizado:
 python3 tools/summarize_log.py events.log
 ```
 
-O sumarizador exibe como resultado o número de *threads*, o tempo total (`wall_ns` da linha `RUN` do arquivo de *log*, convertido para segundos), o número de sessões e a vazão. Além disso, exibe uma tabela com cada tipo de operação (`V`, `H`, `P`, `R`) e cada resultado, a quantidade de chamadas e a distribuição da duração de cada chamada (fim menos início), em milissegundos. Como medidas-resumo, são calculados os valores de média, de mediana (p50), dos percentis 95 e 99 (p95, p99) e o valor máximo.
+O sumarizador exibe como resultado o número de *threads*, o tempo total (`wall_ns` da linha `RUN` do arquivo de *log*, convertido para segundos), o número de sessões e a vazão. Além disso, exibe uma tabela com cada tipo de operação (`V`, `H`, `P`, `R`) e cada resultado, a quantidade de chamadas e a distribuição da duração de cada chamada (fim menos início), em milissegundos. Como medidas-resumo, são calculados a média, a mediana (p50), os percentis 95 e 99 (p95 e p99) e o valor máximo, todos em milissegundos.
 
 Um exemplo de resultado da execução do sumarizador seria:
 
@@ -360,23 +360,23 @@ P   SOLD           236    10.164    10.148    10.293    10.439    10.610
 V   OK            1043     0.019     0.016     0.038     0.061     0.105
 ```
 
-Nesse exemplo, as 387 reservas concedidas (`H` `HELD`) levaram, em média, 0,019 ms; porém, a mais lenta levou 4,995 ms. Esse contraste entre a média e o máximo costuma indicar espera por uma trava ou atraso de escalonamento. Uma compra (`P` `SOLD`) levou cerca de 10 ms porque inclui a cobrança no *gateway* (`payment_ms`) e, se houver fila, a espera pela permissão de cobrança. Os percentis mostram a cauda da distribuição, que a média esconde.
+Nesse exemplo, as 387 reservas concedidas (`H` `HELD`) levaram, em média, 0,019 ms; porém, a mais lenta levou 4,995 ms. Esse contraste entre a média e o máximo costuma indicar a espera por uma trava ou um atraso no escalonamento. Uma compra (`P` `SOLD`) levou cerca de 10 ms porque inclui a cobrança no *gateway* (`payment_ms`) e, se houver fila, a espera pela permissão de cobrança. Os percentis mostram a cauda da distribuição, que a média esconde.
 
 ## Tarefas
 
 ### Implementação
 
-Implemente o trabalho em **Java, C++ ou Python, obrigatoriamente**. Após clonar este repositório, mantenha **apenas os arquivos contidos no diretório da linguagem de programação escolhida** na raiz do repositório; os demais, das outras linguagens, devem ser **removidos**. Como mencionado anteriormente, os esqueletos compilam, mas lançam exceções nos métodos a implementar.
+Implemente o trabalho em **Java, C++ ou Python, obrigatoriamente**. Após clonar este repositório, mantenha **apenas os arquivos do diretório da linguagem de programação escolhida** na raiz do repositório; os demais, das outras linguagens, devem ser **removidos**. Como mencionado anteriormente, os esqueletos compilam, mas lançam exceções nos métodos a implementar.
 
 **Serviço.** Implemente a interface `TicketService` em **duas versões**, que diferem pela granularidade da sincronização, isto é, por quanto do estado compartilhado cada trava protege:
 
-1. *Coarse* (`CoarseTicketService`, opção `--impl coarse`): Nesta versão, um único mecanismo de exclusão mútua (um *lock* ou monitor) protege **todo** o estado do serviço (assentos, reservas de cada pessoa compradora, contadores e consulta ao mapa), de modo que qualquer operação de qualquer pessoa compradora precisa adquiri-lo. Esta é a versão mais simples de implementar e de provar correta, e serve como referência de corretude e como *baseline* dos experimentos. O limite de cobranças simultâneas (`max_payments`) continua sendo necessário e pode ser garantido com um semáforo, que não conta como refinamento.
-2. *Fine* (`FineTicketService`, opção `--impl fine`): Nesta versão, o estado é dividido de modo que operações independentes não precisem esperar umas pelas outras. Para ser considerada fina, a versão deve satisfazer pelo menos uma das condições a seguir, em relação à *coarse*:
+1. ***Coarse* (`CoarseTicketService`, opção `--impl coarse`):** Nesta versão, um único mecanismo de exclusão mútua (um *lock* ou monitor) protege todo o estado do serviço (assentos, reservas de cada pessoa compradora, contadores e consulta ao mapa), de modo que qualquer operação de qualquer pessoa compradora precisa adquiri-lo. Esta é a versão mais simples de implementar e de provar correta, e serve como referência de corretude e como *baseline* para os experimentos. O limite de cobranças simultâneas (`max_payments`) continua sendo necessário e pode ser garantido com um semáforo, que não conta como refinamento.
+2. ***Fine* (`FineTicketService`, opção `--impl fine`):** Nesta versão, o estado é dividido de modo que operações independentes não precisem esperar umas pelas outras. Para ser considerada fina, a versão deve satisfazer pelo menos uma das condições a seguir, em relação à *coarse*:
 
    - Estado particionado: há travas distintas para partes distintas do estado (por exemplo, por assento ou por setor), de modo que compradores que disputam assentos diferentes não se bloqueiam.
-   - Leitura sem exclusão mútua total: a operação `view` não bloqueia as demais operações, nem as outras consultas, por exemplo, com um *lock* de leitura e escrita ou via operações atômicaso.
+   - Leitura sem exclusão mútua total: a operação `view` não bloqueia as demais operações nem outras consultas, por exemplo, com um *lock* de leitura e escrita ou por meio de operações atômicas.
 
-É importante destacar que a versão *fine* não necessariamente é melhor em termos de desempenho. Dessa forma, se essa versão não for mais rápida que a *coarse* em alguma situação, isso é um resultado válido, desde que explicado no relatório.
+É importante destacar que a versão *fine* não é necessariamente melhor em termos de desempenho. Dessa forma, se essa versão não for mais rápida que a *coarse* em alguma situação, isso é um resultado válido, desde que seja explicado no relatório.
 
 No processo de implementação, deverão ser tomadas as seguintes decisões:
 
@@ -387,16 +387,16 @@ No processo de implementação, deverão ser tomadas as seguintes decisões:
 
 ***Pipeline*** (`Main`). O esqueleto executa tudo sequencialmente. O *loop* deve ser substituído por um *pipeline* concorrente com:
 
-- um **produtor**, que entrega as sessões da carga, na ordem do arquivo, ao número de *threads* definido na opção `--workers`;
-- uma **fila limitada** com, no máximo, `queue_capacity` sessões esperando; quando a fila está cheia, o produtor espera, e quando está vazia, as *threads* esperam;
-- o número de **threads** definido pela opção `--workers`, cada *thread* com o seu objeto `SessionRunner` e a sua lista de registros, que processam uma sessão inteira por vez;
-- uma **porta de largada**: o produtor, as *threads* e a *thread* principal começam juntos, e o tempo medido (`wall`) vai da abertura da porta até o término de todas as sessões, sem incluir a criação das *threads*;
-- **encerramento correto**: as *threads* terminam quando as sessões terminam, sem depender de pausas ou limites de tempo.
+- um produtor, que entrega as sessões da carga, na ordem do arquivo, ao número de *threads* definido na opção `--workers`;
+- uma fila limitada com, no máximo, `queue_capacity` sessões esperando; quando a fila está cheia, o produtor espera, e quando está vazia, as *threads* esperam;
+- o número de threads definido pela opção `--workers`, cada *thread* com o seu objeto `SessionRunner` e a sua lista de registros, que processam uma sessão inteira por vez;
+- uma porta de largada: o produtor, as *threads* e a *thread* principal começam juntos, e o tempo medido (`wall`) vai da abertura da porta até o término de todas as sessões, sem incluir a criação das *threads*;
+- encerramento correto: as *threads* terminam quando as sessões terminam, sem depender de pausas ou de limites de tempo.
 
 A implementação deve considerar as seguintes restrições:
 
 - As *threads* devem ser criadas explicitamente, **não sendo permitido usar *pools* de *threads***;
-- Em Python, deverão ser utilizadas *threads* (módulo `threading`), não processos.
+- Em Python, deverão ser utilizadas *threads* (módulo [`threading`](https://docs.python.org/3/library/threading.html)), não processos.
 - O código fornecido e o formato do arquivo de *log* **não devem ser alterados**.
 
 Para executar os programas, os seguintes comandos devem ser utilizados de acordo com a linguagem de programação escolhida para a implementação:
@@ -416,7 +416,7 @@ python3 python/main.py workloads/realistic-1.txt --workers 16 --impl fine -o eve
 python3 tools/validate_log.py workloads/realistic-1.txt events.log
 ```
 
-***Warm-up* (apenas em Java).** O esqueleto de [`Main.java`](java/src/Main.java) também aceita a opção `--warmup N` (valor padrão `0`), usada na etapa de [experimentação](#experimentação). Essa opção faz com que o *pipeline* seja executado `N` vezes sobre as primeiras 100 sessões da carga, descartando o resultado, antes da execução medida. Não é necessário implementar essa opção, mas sim apenas garantir que a execução do *pipeline* (método `execute`) crie tudo o que usa (serviço, *gateway*, filas e *threads*) a cada chamada e não deixe estado de uma chamada para a próxima. Em C++ e em Python, essa opção não é necessária e, por isso, não existe no esqueleto para essas linguagens.
+***Warm-up* (apenas em Java).** O esqueleto de [`Main.java`](java/src/Main.java) também aceita a opção `--warmup N` (valor padrão `0`), usada na etapa de [experimentação](#experimentação). Essa opção faz com que o *pipeline* seja executado `N` vezes sobre as primeiras 100 sessões da carga, descartando o resultado, antes da execução medida. Não é necessário implementar essa opção, mas sim garantir que a execução do *pipeline* (método `execute`) crie tudo o que usa (serviço, *gateway*, filas e *threads*) a cada chamada e não deixe estado de uma chamada para a próxima. Em C++ e em Python, essa opção não é necessária e, por isso, não está presente no esqueleto da implementação nessas duas linguagens.
 
 ### Experimentação
 
@@ -446,7 +446,7 @@ Os experimentos a serem realizados neste trabalho tratam de combinações dos tr
 
 | Fator | Níveis | Como é controlado |
 | :---- | :----- | :---------------- |
-| Número de threads | Pelo menos cinco valores, incluindo 1 e um valor maior que o número de núcleos de processamento disponíveis na máquina de execução (por exemplo, 1, 2, 4, 8 e 16) | Opção `--workers` do programa. Com 1 thread, o *pipeline* opera sequencialmente e serve como base de comparação. |
+| Número de threads | Pelo menos 5 valores, incluindo 1 e um valor maior que o número de núcleos de processamento disponíveis na máquina de execução (por exemplo, 1, 2, 4, 8 e 16) | Opção `--workers` do programa. Com 1 thread, o *pipeline* opera sequencialmente e serve como base de comparação. |
 | Versão do serviço | `coarse` e `fine` | Opção `--impl` do programa |
 | Perfil de carga | `realistic` e `stress` | Arquivo de carga gerado com `--profile` |
 
@@ -479,9 +479,9 @@ Como o experimento E1 envolve centenas de execuções, é interessante automatiz
 
 Os *logs* também devem ser guardados, pois a análise do tempo por operação parte deles. Cada configuração (versão × perfil × número de threads) deve ser executada pelo menos **10 vezes**, e as execuções devem ser **alternadas**: em vez de fazer as 10 repetições de uma configuração e depois as da seguinte, elas **devem ser intercaladas** (por exemplo, *coarse*, *fine*, *coarse*, e assim sucessivamente), de modo que qualquer oscilação da máquina ao longo do tempo (temperatura, outros processos) afete ambas as versões igualmente.
 
-Para controlar o ambiente de execução, recomenda-se que outros programas em execução sejam encerrados e que o computador seja conectado à tomada de energia e não seja utilizado durante as medições. O relatório deve registrar o processador, o número de núcleos de processamento, a quantidade de memória RAM instalada, o sistema operacional em execução, a versão da linguagem e do compilador (ou da máquina virtual Java, se for o caso) e as opções utilizadas.
+Para controlar o ambiente de execução, recomenda-se encerrar outros programas em execução e conectar o computador à tomada de energia, sem utilizá-lo durante as medições. O relatório deve registrar o processador, o número de núcleos de processamento, a quantidade de memória RAM instalada, o sistema operacional em execução, a versão da linguagem e do compilador (ou da máquina virtual Java, se for o caso) e as opções utilizadas.
 
-Nas primeiras execuções, a máquina virtual Java ainda interpreta e compila o código, fazendo com que os tempos sejam maiores e mais variáveis e, consequentemente, distorcendo a média. Por isso, em Java, toda execução do experimento deve usar `--warmup N`: o programa executa o *pipeline* `N` vezes, sobre as primeiras 100 sessões e sem efetivamente medir, e somente a partir da próxima execução mede e grava o *log*. Para que o aquecimento não encareça demais as execuções com poucas *threads*, ele pode ser feito sobre uma carga reduzida (por exemplo, as primeiras 100 sessões do arquivo) em vez da carga completa, a escolha devendo ser reportada informada no relatório. Dessa forma, cada execução continua produzindo **um único tempo e um único *log***, exatamente como em C++ e em Python. Em C++ e em Python, não é necessário aquecimento, mas a primeira execução pode ser mais lenta por efeitos de *cache* do sistema, então é válido descartar uma execução inicial antes de começar a coleta, também informando isso no relatório.
+Nas primeiras execuções, a máquina virtual Java ainda interpreta e compila o código, o que faz com que os tempos sejam maiores e mais variáveis e, consequentemente, distorça a média. Por isso, em Java, toda execução do experimento deve usar `--warmup N`: o programa executa o *pipeline* `N` vezes, sobre as primeiras 100 sessões e sem efetivamente medir, e somente a partir da próxima execução mede e grava o *log*. Para que o aquecimento não encareça demais as execuções com poucas *threads*, ele pode ser feito sobre uma carga reduzida (por exemplo, as primeiras 100 sessões do arquivo), em vez da carga completa, devendo a escolha ser reportada no relatório. Dessa forma, cada execução continua produzindo **um único tempo e um único *log***, exatamente como em C++ e em Python. Em C++ e em Python, não é necessário aquecimento, mas a primeira execução pode ser mais lenta por efeitos de *cache* do sistema, então é válido descartar uma execução inicial antes de começar a coleta, também informando isso no relatório.
 
 #### Tratamento dos dados
 
@@ -509,7 +509,7 @@ Uma vez realizadas as tarefas de implementação e de experimentação, deverá 
 
 ## Autoria e política de colaboração
 
-Este trabalho deverá ser realizado em equipe composta por **dois estudantes**, sendo importante dividir as tarefas igualmente entre os integrantes, que devem ser capazes de explicar qualquer trecho do código e do relatório. Após a implementação da solução, o arquivo [`author.md`](https://github.com/ufrn-concprog/ticket-sync/tree/master/author.md) presente no repositório deverá ser editado para incluir as informações de identificação (nome completo e endereço de *e-mail*) dos integrantes da equipe.
+Este trabalho deverá ser realizado em equipe composta por **dois estudantes**, sendo importante dividir as tarefas igualmente entre os integrantes, que devem ser capazes de explicar qualquer trecho do código e do relatório. Após a implementação da solução, o arquivo [`author.md`](https://github.com/ufrn-concprog/ticket-sync/tree/master/author.md) presente no repositório deverá ser editado para incluir as informações de identificação (nome completo e endereço de *e-mail*) das pessoas integrantes da equipe.
 
 O trabalho em cooperação entre os estudantes da turma é estimulado, sendo admissível a discussão de ideias e estratégias. Contudo, tal interação não deve ser entendida como permissão para utilizar parte do código-fonte de colegas, o que pode configurar plágio. **Trabalhos copiados, no todo ou em parte, de outros colegas ou da Internet, ou ainda gerados por ferramentas de Inteligência Artificial, serão anulados e receberão nota zero.**
 
@@ -541,4 +541,4 @@ Na avaliação dos critérios acima, poderão ser aplicadas reduções de nota n
 
 ## Dúvidas e informações
 
-Caso haja qualquer dúvida, questionamento ou necessidade de informação adicional, bem como identificados erros no gerador, no validador ou em qualquer código-fonte fornecido, enviar um *e-mail* para <everton.cavalcante@ufrn.br>. As correções nos artefatos serão disponibilizadas a toda a turma com a maior brevidade possível.
+Caso haja qualquer dúvida, questionamento ou necessidade de informação adicional, bem como erros identificados no gerador, no validador ou em qualquer código-fonte fornecido, enviar um *e-mail* para <everton.cavalcante@ufrn.br>. As correções nos artefatos serão disponibilizadas a toda a turma com a maior brevidade possível.
