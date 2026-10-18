@@ -372,8 +372,8 @@ Implemente o trabalho em **Java, C++ ou Python, obrigatoriamente**. Após clonar
 1. *Coarse* (`CoarseTicketService`, opção `--impl coarse`): Nesta versão, um único mecanismo de exclusão mútua (um *lock* ou monitor) protege **todo** o estado do serviço (assentos, reservas de cada pessoa compradora, contadores e consulta ao mapa), de modo que qualquer operação de qualquer pessoa compradora precisa adquiri-lo. Esta é a versão mais simples de implementar e de provar correta, e serve como referência de corretude e como *baseline* dos experimentos. O limite de cobranças simultâneas (`max_payments`) continua sendo necessário e pode ser garantido com um semáforo, que não conta como refinamento.
 2. *Fine* (`FineTicketService`, opção `--impl fine`): Nesta versão, o estado é dividido de modo que operações independentes não precisem esperar umas pelas outras. Para ser considerada fina, a versão deve satisfazer pelo menos uma das condições a seguir, em relação à *coarse*:
 
-- Estado particionado: há travas distintas para partes distintas do estado (por exemplo, por assento ou por setor), de modo que compradores que disputam assentos diferentes não se bloqueiam.
-- Leitura sem exclusão mútua total: a operação `view` não bloqueia as demais operações, nem as outras consultas, por exemplo, com um *lock* de leitura e escrita ou via operações atômicaso.
+   - Estado particionado: há travas distintas para partes distintas do estado (por exemplo, por assento ou por setor), de modo que compradores que disputam assentos diferentes não se bloqueiam.
+   - Leitura sem exclusão mútua total: a operação `view` não bloqueia as demais operações, nem as outras consultas, por exemplo, com um *lock* de leitura e escrita ou via operações atômicaso.
 
 É importante destacar que a versão *fine* não necessariamente é melhor em termos de desempenho. Dessa forma, se essa versão não for mais rápida que a *coarse* em alguma situação, isso é um resultado válido, desde que explicado no relatório.
 
