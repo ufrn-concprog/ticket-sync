@@ -365,7 +365,7 @@ Nesse exemplo, as 387 reservas concedidas (`H` `HELD`) levaram, em média, 0,019
 
 ### Implementação
 
-Implemente o trabalho em **Java, C++ ou Python, obrigatoriamente**. Após clonar este repositório, mantenha **apenas o diretório da linguagem de programação escolhida**; os demais, das outras linguagens, devem ser **removidos**. Como mencionado anteriormente, os esqueletos compilam, mas lançam exceções nos métodos a implementar.
+Implemente o trabalho em **Java, C++ ou Python, obrigatoriamente**. Após clonar este repositório, mantenha **apenas os arquivos contidos no diretório da linguagem de programação escolhida**; os demais, das outras linguagens, devem ser **removidos**. Como mencionado anteriormente, os esqueletos compilam, mas lançam exceções nos métodos a implementar.
 
 **Serviço.** Implemente a interface `TicketService` em **duas versões**, que diferem pela granularidade da sincronização, isto é, por quanto do estado compartilhado cada trava protege:
 
