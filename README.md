@@ -218,11 +218,11 @@ O gerador de carga cria um arquivo de texto de forma determinística a partir de
 
 | Tipo | Comportamento na carga | Proporção aproximada |
 | :--- | :--------------------- | :------------------- |
-| *Navegador* | Apenas consulta mapas (de 3 a 10 `V`) | 25% |
-| *Comprador* | Consulta, reserva um grupo de 1 a 4 assentos vizinhos, pensa e paga por todos (com 5% de pagamento recusado) | 40% |
-| *Desistente* | Reserva um grupo, pensa e abandona o processo de compra, ou libera os assentos (`R`) e desiste, deixando a reserva vencer por si só | 18% |
-| *Lento* | Reserva, demora mais tempo que o $TTL$ e tenta efetuar o pagamento muito tardiamente | 12% |
-| *Ganancioso* | Tenta reservar mais assentos que o limite `max_holds` | 5% |
+| *Navegador* (*browser*) | Apenas consulta mapas (de 3 a 10 `V`) | 25% |
+| *Comprador* (*buyer*) | Consulta, reserva um grupo de 1 a 4 assentos vizinhos, pensa e paga por todos (com 5% de pagamento recusado) | 40% |
+| *Desistente* (*abandoner*) | Reserva um grupo, pensa e abandona o processo de compra, ou libera os assentos (`R`) e desiste, deixando a reserva vencer por si só | 18% |
+| *Lento* (*slow*) | Reserva, demora mais tempo que o $TTL$ e tenta efetuar o pagamento muito tardiamente | 12% |
+| *Ganancioso* (*greedy*) | Tenta reservar mais assentos que o limite `max_holds` | 5% |
 
 Cerca de 60% das tentativas de reserva miram o Setor 0, localizado mais à frente do teatro, criando um "ponto quente" de disputa. As demais tentativas de reserva se distribuem uniformemente ao longo do evento.
 
